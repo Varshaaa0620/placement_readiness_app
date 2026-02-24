@@ -10,12 +10,15 @@ export default function DigestPage() {
         minHeight: '100vh',
         backgroundColor: colors.background,
         padding: spacing.lg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <div
         style={{
           maxWidth: '720px',
-          margin: '0 auto',
+          textAlign: 'center',
         }}
       >
         <h1
@@ -28,7 +31,7 @@ export default function DigestPage() {
             letterSpacing: '-0.01em',
           }}
         >
-          Digest
+          Daily Digest
         </h1>
         <p
           style={{
@@ -38,7 +41,7 @@ export default function DigestPage() {
             margin: 0,
           }}
         >
-          This section will be built in the next step.
+          Your daily job summary will arrive at 9AM. Check back tomorrow for your first digest.
         </p>
       </div>
     </div>

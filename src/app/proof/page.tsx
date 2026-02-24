@@ -10,12 +10,15 @@ export default function ProofPage() {
         minHeight: '100vh',
         backgroundColor: colors.background,
         padding: spacing.lg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <div
         style={{
           maxWidth: '720px',
-          margin: '0 auto',
+          textAlign: 'center',
         }}
       >
         <h1
@@ -28,7 +31,7 @@ export default function ProofPage() {
             letterSpacing: '-0.01em',
           }}
         >
-          Proof
+          Artifact Collection
         </h1>
         <p
           style={{
@@ -38,7 +41,7 @@ export default function ProofPage() {
             margin: 0,
           }}
         >
-          This section will be built in the next step.
+          Your profile, resume, and portfolio links will be managed here.
         </p>
       </div>
     </div>

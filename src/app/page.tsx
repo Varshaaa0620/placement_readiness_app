@@ -11,39 +11,43 @@ export default function Home() {
         minHeight: '100vh',
         backgroundColor: colors.background,
         padding: spacing.lg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <div
         style={{
           maxWidth: '720px',
-          margin: '0 auto',
+          textAlign: 'center',
         }}
       >
         <h1
           style={{
             fontFamily: 'Georgia, serif',
-            fontSize: '48px',
+            fontSize: '56px',
             fontWeight: 600,
             color: colors.text.primary,
             marginBottom: spacing.md,
             letterSpacing: '-0.01em',
+            lineHeight: '1.3',
           }}
         >
-          Welcome to KodNest
+          Stop Missing The Right Jobs.
         </h1>
         <p
           style={{
-            fontSize: '16px',
+            fontSize: '18px',
             color: colors.text.secondary,
             lineHeight: '1.8',
-            marginBottom: spacing.lg,
+            marginBottom: spacing.xl,
           }}
         >
-          A premium job notification application built with intention, coherence, and calm design.
+          Precision-matched job discovery delivered daily at 9AM.
         </p>
-        <Link href="/dashboard">
+        <Link href="/settings">
           <Button variant="primary" size="md">
-            Go to Dashboard
+            Start Tracking
           </Button>
         </Link>
       </div>
