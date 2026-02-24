@@ -3,15 +3,17 @@
 import React from 'react'
 import { Job } from '../data/jobs'
 import { colors, spacing, transitions } from '../styles/designTokens'
+import { getMatchScoreColor } from '../utils/preferences'
 
 interface JobCardProps {
   job: Job
+  matchScore?: number
   onView: (job: Job) => void
   onSave: (jobId: string) => void
   isSaved: boolean
 }
 
-export const JobCard: React.FC<JobCardProps> = ({ job, onView, onSave, isSaved }) => {
+export const JobCard: React.FC<JobCardProps> = ({ job, matchScore, onView, onSave, isSaved }) => {
   return (
     <div
       style={{
@@ -64,21 +66,47 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onView, onSave, isSaved }
             {job.company}
           </p>
         </div>
-        <span
+
+        {/* Badges */}
+        <div
           style={{
-            backgroundColor: colors.bg.subtle,
-            border: `1px solid ${colors.border.subtle}`,
-            color: colors.text.secondary,
-            padding: `${spacing.xs} ${spacing.sm}`,
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
+            display: 'flex',
+            gap: spacing.sm,
             marginLeft: spacing.md,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
           }}
         >
-          {job.source}
-        </span>
+          {matchScore !== undefined && (
+            <span
+              style={{
+                backgroundColor: getMatchScoreColor(matchScore),
+                color: 'white',
+                padding: `${spacing.xs} ${spacing.sm}`,
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {matchScore}% match
+            </span>
+          )}
+          <span
+            style={{
+              backgroundColor: colors.bg.subtle,
+              border: `1px solid ${colors.border.subtle}`,
+              color: colors.text.secondary,
+              padding: `${spacing.xs} ${spacing.sm}`,
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {job.source}
+          </span>
+        </div>
       </div>
 
       {/* Meta Info */}

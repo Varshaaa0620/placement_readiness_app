@@ -4,11 +4,14 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { Job, jobsData } from '../../data/jobs'
 import { JobCard, JobModal } from '../../components'
 import { colors, spacing } from '../../styles/designTokens'
+import { UserPreferences, calculateMatchScore } from '../../utils/preferences'
 
 export default function DashboardPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null)
+  const [showOnlyMatches, setShowOnlyMatches] = useState(false)
 
   // Filters
   const [filters, setFilters] = useState({
@@ -20,7 +23,7 @@ export default function DashboardPage() {
     sortBy: 'latest',
   })
 
-  // Load saved jobs from localStorage
+  // Load saved jobs and preferences from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('savedJobs')
     if (saved) {
@@ -28,6 +31,15 @@ export default function DashboardPage() {
         setSavedJobIds(new Set(JSON.parse(saved)))
       } catch (e) {
         console.error('Error loading saved jobs:', e)
+      }
+    }
+
+    const prefs = localStorage.getItem('jobTrackerPreferences')
+    if (prefs) {
+      try {
+        setPreferences(JSON.parse(prefs))
+      } catch (e) {
+        console.error('Error loading preferences:', e)
       }
     }
   }, [])
@@ -50,10 +62,19 @@ export default function DashboardPage() {
   const experiences = Array.from(new Set(jobsData.map((j) => j.experience))).sort()
   const sources = Array.from(new Set(jobsData.map((j) => j.source))).sort()
 
+  // Create job scores map
+  const jobScoresMap = useMemo(() => {
+    const map = new Map<string, number>()
+    jobsData.forEach((job) => {
+      map.set(job.id, calculateMatchScore(job, preferences))
+    })
+    return map
+  }, [preferences])
+
   // Filter and sort jobs
   const filteredJobs = useMemo(() => {
     let result = jobsData.filter((job) => {
-      // Keyword search
+      // Keyword search (AND logic with other filters)
       if (filters.keyword) {
         const keyword = filters.keyword.toLowerCase()
         const matchesTitle = job.title.toLowerCase().includes(keyword)
@@ -61,17 +82,23 @@ export default function DashboardPage() {
         if (!matchesTitle && !matchesCompany) return false
       }
 
-      // Location filter
+      // Location filter (AND)
       if (filters.location && job.location !== filters.location) return false
 
-      // Mode filter
+      // Mode filter (AND)
       if (filters.mode && job.mode !== filters.mode) return false
 
-      // Experience filter
+      // Experience filter (AND)
       if (filters.experience && job.experience !== filters.experience) return false
 
-      // Source filter
+      // Source filter (AND)
       if (filters.source && job.source !== filters.source) return false
+
+      // Show only matches filter (AND)
+      if (showOnlyMatches && preferences) {
+        const score = jobScoresMap.get(job.id) || 0
+        if (score < preferences.minMatchScore) return false
+      }
 
       return true
     })
@@ -81,10 +108,12 @@ export default function DashboardPage() {
       result.sort((a, b) => a.postedDaysAgo - b.postedDaysAgo)
     } else if (filters.sortBy === 'oldest') {
       result.sort((a, b) => b.postedDaysAgo - a.postedDaysAgo)
+    } else if (filters.sortBy === 'match') {
+      result.sort((a, b) => (jobScoresMap.get(b.id) || 0) - (jobScoresMap.get(a.id) || 0))
     } else if (filters.sortBy === 'salary') {
       result.sort((a, b) => {
         const extractSalary = (range: string) => {
-          const match = range.match(/(\d+)/);
+          const match = range.match(/(\d+)/)
           return match ? parseInt(match[1]) : 0
         }
         return extractSalary(b.salaryRange) - extractSalary(a.salaryRange)
@@ -92,7 +121,7 @@ export default function DashboardPage() {
     }
 
     return result
-  }, [filters])
+  }, [filters, showOnlyMatches, preferences, jobScoresMap])
 
   return (
     <div
@@ -132,6 +161,29 @@ export default function DashboardPage() {
           Browse {jobsData.length} curated tech jobs from leading Indian companies.
         </p>
 
+        {/* Preferences Banner */}
+        {!preferences && (
+          <div
+            style={{
+              backgroundColor: colors.bg.subtle,
+              border: `1px solid ${colors.border.subtle}`,
+              borderRadius: '4px',
+              padding: spacing.md,
+              marginBottom: spacing.lg,
+            }}
+          >
+            <p
+              style={{
+                fontSize: '14px',
+                color: colors.text.secondary,
+                margin: 0,
+              }}
+            >
+              📊 <strong>Pro tip:</strong> Set your preferences on the <a href="/settings" style={{ color: colors.accent, textDecoration: 'none' }}>Settings</a> page to activate intelligent matching and get personalized match scores.
+            </p>
+          </div>
+        )}
+
         {/* Filter Bar */}
         <div
           style={{
@@ -147,6 +199,7 @@ export default function DashboardPage() {
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gap: spacing.md,
+              marginBottom: spacing.md,
             }}
           >
             {/* Keyword Search */}
@@ -275,9 +328,36 @@ export default function DashboardPage() {
             >
               <option value="latest">Latest First</option>
               <option value="oldest">Oldest First</option>
+              {preferences && <option value="match">Match Score</option>}
               <option value="salary">Highest Salary</option>
             </select>
           </div>
+
+          {/* Show Only Matches Toggle */}
+          {preferences && (
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.sm,
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: colors.text.primary,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={showOnlyMatches}
+                onChange={(e) => setShowOnlyMatches(e.target.checked)}
+                style={{
+                  cursor: 'pointer',
+                }}
+              />
+              <span>
+                Show only jobs above {preferences.minMatchScore}% threshold
+              </span>
+            </label>
+          )}
         </div>
 
         {/* Results Info */}
@@ -289,7 +369,7 @@ export default function DashboardPage() {
           }}
         >
           Showing {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}
-          {Object.values(filters).some((f) => f && f !== 'latest')
+          {Object.values(filters).some((f) => f && f !== 'latest') || showOnlyMatches
             ? ' (filtered)'
             : ''}
         </p>
@@ -301,6 +381,7 @@ export default function DashboardPage() {
               <JobCard
                 key={job.id}
                 job={job}
+                matchScore={preferences ? jobScoresMap.get(job.id) : undefined}
                 onView={(job) => {
                   setSelectedJob(job)
                   setIsModalOpen(true)
@@ -330,7 +411,9 @@ export default function DashboardPage() {
                 letterSpacing: '-0.01em',
               }}
             >
-              No jobs match your search.
+              {showOnlyMatches
+                ? 'No roles match your criteria.'
+                : 'No jobs match your search.'}
             </h2>
             <p
               style={{
@@ -339,7 +422,9 @@ export default function DashboardPage() {
                 margin: 0,
               }}
             >
-              Try adjusting your filters to find more opportunities.
+              {showOnlyMatches
+                ? 'Adjust your filters or lower your match score threshold to see more opportunities.'
+                : 'Try adjusting your filters to find more opportunities.'}
             </p>
           </div>
         )}
