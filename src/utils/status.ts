@@ -11,10 +11,19 @@ export interface JobStatusUpdate {
 }
 
 /**
+ * Check if we're on the client side
+ */
+function isClient(): boolean {
+  return typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+}
+
+/**
  * Get all job statuses from localStorage
  * Returns object mapping jobId to status
  */
 export function getAllJobStatuses(): Record<string, JobStatus> {
+  if (!isClient()) return {}
+
   const stored = localStorage.getItem('jobTrackerStatuses')
   if (!stored) return {}
 
@@ -39,6 +48,8 @@ export function getJobStatus(jobId: string): JobStatus {
  * Set status for a job and record the update
  */
 export function setJobStatus(jobId: string, jobTitle: string, company: string, status: JobStatus): void {
+  if (!isClient()) return
+
   // Update the status map
   const statuses = getAllJobStatuses()
   statuses[jobId] = status
@@ -60,6 +71,8 @@ export function setJobStatus(jobId: string, jobTitle: string, company: string, s
  * Get all status updates in reverse chronological order (newest first)
  */
 export function getStatusUpdates(): JobStatusUpdate[] {
+  if (!isClient()) return []
+
   const stored = localStorage.getItem('jobTrackerStatusUpdates')
   if (!stored) return []
 
@@ -110,6 +123,8 @@ export function getStatusBgColor(status: JobStatus): string {
  * Clear all statuses and updates (for testing/reset)
  */
 export function clearAllStatuses(): void {
+  if (!isClient()) return
+
   localStorage.removeItem('jobTrackerStatuses')
   localStorage.removeItem('jobTrackerStatusUpdates')
 }

@@ -1,6 +1,13 @@
 import { Job, jobsData } from '../data/jobs'
 import { UserPreferences, calculateMatchScore } from './preferences'
 
+/**
+ * Check if we're on the client side
+ */
+function isClient(): boolean {
+  return typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+}
+
 export interface DigestJob {
   id: string
   title: string
@@ -81,6 +88,8 @@ export function generateDigest(preferences: UserPreferences | null): Digest | nu
  * Get or create today's digest
  */
 export function getOrCreateDigest(preferences: UserPreferences | null): Digest | null {
+  if (!isClient()) return null
+
   const key = getDigestKey()
   const existingDigest = localStorage.getItem(key)
 
