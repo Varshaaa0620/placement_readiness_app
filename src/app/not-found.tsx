@@ -1,22 +1,27 @@
 'use client'
 
+import React from 'react'
 import Link from 'next/link'
+import { colors, spacing } from '../styles/designTokens'
 import { Button } from '../components'
-import { spacing, colors } from '../styles/designTokens'
 
-export default function Home() {
+export default function NotFound() {
   return (
     <div
       style={{
         minHeight: '100vh',
         backgroundColor: colors.background,
         padding: spacing.lg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <div
         style={{
           maxWidth: '720px',
           margin: '0 auto',
+          textAlign: 'center',
         }}
       >
         <h1
@@ -29,7 +34,7 @@ export default function Home() {
             letterSpacing: '-0.01em',
           }}
         >
-          Welcome to KodNest
+          Page Not Found
         </h1>
         <p
           style={{
@@ -39,7 +44,7 @@ export default function Home() {
             marginBottom: spacing.lg,
           }}
         >
-          A premium job notification application built with intention, coherence, and calm design.
+          The page you are looking for does not exist.
         </p>
         <Link href="/dashboard">
           <Button variant="primary" size="md">
@@ -50,4 +55,3 @@ export default function Home() {
     </div>
   )
 }
-

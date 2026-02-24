@@ -1,10 +1,9 @@
 'use client'
 
-import Link from 'next/link'
-import { Button } from '../components'
-import { spacing, colors } from '../styles/designTokens'
+import React from 'react'
+import { colors, spacing } from '../../styles/designTokens'
 
-export default function Home() {
+export default function SettingsPage() {
   return (
     <div
       style={{
@@ -29,25 +28,19 @@ export default function Home() {
             letterSpacing: '-0.01em',
           }}
         >
-          Welcome to KodNest
+          Settings
         </h1>
         <p
           style={{
             fontSize: '16px',
             color: colors.text.secondary,
             lineHeight: '1.8',
-            marginBottom: spacing.lg,
+            margin: 0,
           }}
         >
-          A premium job notification application built with intention, coherence, and calm design.
+          This section will be built in the next step.
         </p>
-        <Link href="/dashboard">
-          <Button variant="primary" size="md">
-            Go to Dashboard
-          </Button>
-        </Link>
       </div>
     </div>
   )
 }
-

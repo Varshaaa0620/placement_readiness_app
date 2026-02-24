@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import '../globals.css'
+import { Navigation } from '../components/Navigation'
+import { colors } from '../styles/designTokens'
 
 export const metadata: Metadata = {
-  title: 'KodNest Premium Build System',
+  title: 'KodNest Job Notification App',
   description: 'Premium SaaS Design System',
 }
 
@@ -25,7 +27,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body style={{ backgroundColor: colors.background, color: colors.text.primary }}>
+        <Navigation />
+        <main>{children}</main>
+      </body>
     </html>
   )
 }
