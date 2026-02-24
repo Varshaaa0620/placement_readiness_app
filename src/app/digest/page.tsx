@@ -10,14 +10,16 @@ import {
   formatDigestForEmail,
   getTodayDateString,
 } from '../../utils/digest'
+import { getRecentStatusUpdates, getStatusBgColor, getStatusColor } from '../../utils/status'
 
 export default function DigestPage() {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [digest, setDigest] = useState<Digest | null>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState('')
+  const [statusUpdates, setStatusUpdates] = useState<ReturnType<typeof getRecentStatusUpdates>>([])
 
-  // Load preferences on mount
+  // Load preferences and status updates on mount
   useEffect(() => {
     const prefs = localStorage.getItem('jobTrackerPreferences')
     if (prefs) {
@@ -27,6 +29,11 @@ export default function DigestPage() {
         console.error('Error loading preferences:', e)
       }
     }
+    
+    // Load recent status updates
+    const updates = getRecentStatusUpdates(5)
+    setStatusUpdates(updates)
+    
     setIsMounted(true)
   }, [])
 
@@ -634,6 +641,110 @@ export default function DigestPage() {
             </p>
           </div>
         </div>
+
+        {/* Recent Status Updates Section */}
+        {statusUpdates.length > 0 && (
+          <div
+            style={{
+              marginTop: spacing.lg,
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: 'Georgia, serif',
+                fontSize: '32px',
+                fontWeight: 600,
+                color: colors.text.primary,
+                marginBottom: spacing.md,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Recent Status Updates
+            </h2>
+
+            <div
+              style={{
+                backgroundColor: 'white',
+                border: `1px solid ${colors.border.default}`,
+                borderRadius: '4px',
+              }}
+            >
+              {statusUpdates.map((update, index) => (
+                <div
+                  key={`${update.jobId}-${update.timestamp}`}
+                  style={{
+                    padding: spacing.md,
+                    borderBottom:
+                      index < statusUpdates.length - 1
+                        ? `1px solid ${colors.border.default}`
+                        : 'none',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: spacing.md,
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      minWidth: '200px',
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 500,
+                        color: colors.text.primary,
+                        margin: `0 0 ${spacing.xs} 0`,
+                      }}
+                    >
+                      {update.jobTitle}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: '14px',
+                        color: colors.accent,
+                        margin: `0 0 ${spacing.xs} 0`,
+                      }}
+                    >
+                      {update.company}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: '12px',
+                        color: colors.text.tertiary,
+                        margin: 0,
+                      }}
+                    >
+                      {new Date(update.timestamp).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+
+                  <span
+                    style={{
+                      backgroundColor: getStatusBgColor(update.status),
+                      color: getStatusColor(update.status),
+                      padding: `${spacing.xs} ${spacing.sm}`,
+                      borderRadius: '4px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {update.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

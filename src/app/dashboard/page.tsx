@@ -5,6 +5,7 @@ import { Job, jobsData } from '../../data/jobs'
 import { JobCard, JobModal } from '../../components'
 import { colors, spacing } from '../../styles/designTokens'
 import { UserPreferences, calculateMatchScore } from '../../utils/preferences'
+import { getJobStatus, JobStatus } from '../../utils/status'
 
 export default function DashboardPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
@@ -20,6 +21,7 @@ export default function DashboardPage() {
     mode: '',
     experience: '',
     source: '',
+    status: '' as JobStatus | '',
     sortBy: 'latest',
   })
 
@@ -93,6 +95,12 @@ export default function DashboardPage() {
 
       // Source filter (AND)
       if (filters.source && job.source !== filters.source) return false
+
+      // Status filter (AND)
+      if (filters.status) {
+        const jobStatus = getJobStatus(job.id)
+        if (jobStatus !== filters.status) return false
+      }
 
       // Show only matches filter (AND)
       if (showOnlyMatches && preferences) {
@@ -309,6 +317,28 @@ export default function DashboardPage() {
                   {src}
                 </option>
               ))}
+            </select>
+
+            {/* Status Filter */}
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value as JobStatus | '' })}
+              style={{
+                padding: `${spacing.sm} ${spacing.sm}`,
+                border: `1px solid ${colors.border.default}`,
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                color: colors.text.primary,
+                backgroundColor: colors.bg.subtle,
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">All Statuses</option>
+              <option value="Not Applied">Not Applied</option>
+              <option value="Applied">Applied</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Selected">Selected</option>
             </select>
 
             {/* Sort Filter */}

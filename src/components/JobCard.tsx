@@ -1,9 +1,11 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Job } from '../data/jobs'
 import { colors, spacing, transitions } from '../styles/designTokens'
 import { getMatchScoreColor } from '../utils/preferences'
+import { getJobStatus, setJobStatus, getStatusColor, getStatusBgColor, JobStatus } from '../utils/status'
+import Toast from './Toast'
 
 interface JobCardProps {
   job: Job
@@ -14,6 +16,18 @@ interface JobCardProps {
 }
 
 export const JobCard: React.FC<JobCardProps> = ({ job, matchScore, onView, onSave, isSaved }) => {
+  const [currentStatus, setCurrentStatus] = useState<JobStatus>(getJobStatus(job.id))
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+
+  const statusOptions: JobStatus[] = ['Not Applied', 'Applied', 'Rejected', 'Selected']
+
+  const handleStatusChange = (newStatus: JobStatus) => {
+    setCurrentStatus(newStatus)
+    setJobStatus(job.id, job.title, job.company, newStatus)
+    setToastMessage(`Status updated: ${newStatus}`)
+    setShowToast(true)
+  }
   return (
     <div
       style={{
@@ -155,6 +169,47 @@ export const JobCard: React.FC<JobCardProps> = ({ job, matchScore, onView, onSav
         </span>
       </div>
 
+      {/* Status Buttons */}
+      <div
+        style={{
+          display: 'flex',
+          gap: spacing.xs,
+          marginBottom: spacing.md,
+          flexWrap: 'wrap',
+        }}
+      >
+        {statusOptions.map((status) => (
+          <button
+            key={status}
+            onClick={() => handleStatusChange(status)}
+            style={{
+              backgroundColor: currentStatus === status ? getStatusColor(status) : getStatusBgColor(status),
+              color: currentStatus === status ? 'white' : getStatusColor(status),
+              border: currentStatus === status ? 'none' : `1px solid ${getStatusColor(status)}`,
+              padding: `${spacing.xs} ${spacing.sm}`,
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: `all ${transitions.base}`,
+            }}
+            onMouseEnter={(e) => {
+              if (currentStatus !== status) {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = getStatusBgColor(status)
+                ;(e.currentTarget as HTMLButtonElement).style.opacity = '0.8'
+              } else {
+                (e.currentTarget as HTMLButtonElement).style.opacity = '0.9'
+              }
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.opacity = '1'
+            }}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+
       {/* Buttons */}
       <div
         style={{
@@ -241,6 +296,13 @@ export const JobCard: React.FC<JobCardProps> = ({ job, matchScore, onView, onSav
           Apply
         </a>
       </div>
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          duration={3000}
+          onDismiss={() => setShowToast(false)}
+        />
+      )}
     </div>
   )
 }
