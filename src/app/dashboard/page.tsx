@@ -30,7 +30,7 @@ export default function DashboardPage() {
     const saved = localStorage.getItem('savedJobs')
     if (saved) {
       try {
-        setSavedJobIds(new Set(JSON.parse(saved)))
+        setSavedJobIds(new Set(JSON.parse(saved) as string[]))
       } catch (e) {
         console.error('Error loading saved jobs:', e)
       }
@@ -39,7 +39,7 @@ export default function DashboardPage() {
     const prefs = localStorage.getItem('jobTrackerPreferences')
     if (prefs) {
       try {
-        setPreferences(JSON.parse(prefs))
+        setPreferences(JSON.parse(prefs) as UserPreferences)
       } catch (e) {
         console.error('Error loading preferences:', e)
       }

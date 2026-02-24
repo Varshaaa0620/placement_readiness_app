@@ -28,7 +28,7 @@ export function getAllJobStatuses(): Record<string, JobStatus> {
   if (!stored) return {}
 
   try {
-    return JSON.parse(stored)
+    return JSON.parse(stored) as Record<string, JobStatus>
   } catch (e) {
     console.error('Error parsing job statuses:', e)
     return {}

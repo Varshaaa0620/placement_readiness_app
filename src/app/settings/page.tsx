@@ -34,7 +34,7 @@ export default function SettingsPage() {
     const saved = localStorage.getItem('jobTrackerPreferences')
     if (saved) {
       try {
-        setPreferences(JSON.parse(saved))
+        setPreferences(JSON.parse(saved) as UserPreferences)
       } catch (e) {
         console.error('Error loading preferences:', e)
       }

@@ -95,7 +95,7 @@ export function getOrCreateDigest(preferences: UserPreferences | null): Digest |
 
   if (existingDigest) {
     try {
-      return JSON.parse(existingDigest)
+      return JSON.parse(existingDigest) as Digest
     } catch (e) {
       console.error('Error parsing existing digest:', e)
     }

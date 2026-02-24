@@ -16,7 +16,7 @@ export default function SavedPage() {
     const saved = localStorage.getItem('savedJobs')
     if (saved) {
       try {
-        const savedIds = new Set(JSON.parse(saved))
+        const savedIds = new Set(JSON.parse(saved) as string[])
         setSavedJobIds(savedIds)
         const saved_jobs = jobsData.filter((job) => savedIds.has(job.id))
         setSavedJobs(saved_jobs)

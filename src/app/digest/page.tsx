@@ -24,7 +24,7 @@ export default function DigestPage() {
     const prefs = localStorage.getItem('jobTrackerPreferences')
     if (prefs) {
       try {
-        setPreferences(JSON.parse(prefs))
+        setPreferences(JSON.parse(prefs) as UserPreferences)
       } catch (e) {
         console.error('Error loading preferences:', e)
       }

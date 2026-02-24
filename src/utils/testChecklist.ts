@@ -86,7 +86,7 @@ export function getTestChecklistState(): TestChecklistState {
   }
 
   try {
-    return JSON.parse(stored)
+    return JSON.parse(stored) as TestChecklistState
   } catch (e) {
     console.error('Error parsing test checklist state:', e)
     return {}
