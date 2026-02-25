@@ -1,7 +1,7 @@
 import React from 'react'
 import { colors, transitions, borderRadius, spacing } from '../styles/designTokens'
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string
   error?: string
   hint?: string
