@@ -144,3 +144,98 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border);
 }
+
+/* Print Styles for Resume Export */
+@media print {
+  /* Hide navigation and UI elements */
+  nav,
+  .no-print,
+  button,
+  .template-switcher,
+  .export-buttons,
+  .validation-warnings {
+    display: none !important;
+  }
+
+  /* Reset body for print */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+
+  /* Ensure white background */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+
+  /* Resume container styling */
+  .resume-print-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0.5in !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Page break rules */
+  .resume-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .resume-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 12pt;
+  }
+
+  /* Typography for print */
+  h1, h2, h3, h4, h5, h6 {
+    color: black !important;
+    margin-bottom: 8pt;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  h1 {
+    font-size: 18pt;
+  }
+
+  h2 {
+    font-size: 14pt;
+    border-bottom: 1pt solid #ccc;
+    padding-bottom: 4pt;
+  }
+
+  h3 {
+    font-size: 12pt;
+  }
+
+  p {
+    font-size: 11pt;
+    line-height: 1.4;
+    margin-bottom: 6pt;
+    max-width: none;
+  }
+
+  /* Links in print */
+  a {
+    color: black !important;
+    text-decoration: none;
+  }
+
+  a[href]:after {
+    content: "";
+  }
+
+  /* Ensure proper page margins */
+  @page {
+    margin: 0.5in;
+    size: auto;
+  }
+}

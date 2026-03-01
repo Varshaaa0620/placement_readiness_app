@@ -7,17 +7,34 @@ import { loadResumeData } from '../../utils/resumeStorage'
 import { ResumeData, defaultResumeData } from '../../types/resume'
 import { ResumeTemplate, getStoredTemplate } from '../../types/template'
 import { colors, spacing } from '../../styles/designTokens'
+import { copyResumeAsText, validateResumeForExport, ValidationWarning } from '../../utils/resumeExport'
 
 export default function PreviewPage() {
   const [resume, setResume] = useState<ResumeData>(defaultResumeData)
   const [template, setTemplate] = useState<ResumeTemplate>('classic')
+  const [warnings, setWarnings] = useState<ValidationWarning[]>([])
+  const [copySuccess, setCopySuccess] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    setResume(loadResumeData())
+    const loadedResume = loadResumeData()
+    setResume(loadedResume)
     setTemplate(getStoredTemplate())
+    setWarnings(validateResumeForExport(loadedResume))
     setIsMounted(true)
   }, [])
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const handleCopyAsText = async () => {
+    const success = await copyResumeAsText(resume)
+    if (success) {
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    }
+  }
 
   if (!isMounted) return null
 
@@ -56,6 +73,7 @@ export default function PreviewPage() {
 
       {/* Template Switcher */}
       <div
+        className="template-switcher no-print"
         style={{
           maxWidth: '850px',
           margin: '0 auto',
@@ -70,6 +88,79 @@ export default function PreviewPage() {
         />
       </div>
 
+      {/* Validation Warnings */}
+      {warnings.length > 0 && (
+        <div
+          className="validation-warnings no-print"
+          style={{
+            maxWidth: '850px',
+            margin: '16px auto 0',
+            padding: '0 20px',
+          }}
+        >
+          {warnings.map((warning, index) => (
+            <div
+              key={index}
+              style={{
+                backgroundColor: colors.semantic.warning + '15',
+                border: `1px solid ${colors.semantic.warning}`,
+                borderRadius: '4px',
+                padding: '12px 16px',
+                marginBottom: '8px',
+                fontSize: '14px',
+                color: colors.semantic.warning,
+              }}
+            >
+              {warning.message}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Export Buttons */}
+      <div
+        className="export-buttons no-print"
+        style={{
+          maxWidth: '850px',
+          margin: '16px auto 0',
+          padding: '0 20px',
+          display: 'flex',
+          gap: '12px',
+          justifyContent: 'center',
+        }}
+      >
+        <button
+          onClick={handlePrint}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: colors.accent,
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          Print / Save as PDF
+        </button>
+        <button
+          onClick={handleCopyAsText}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: colors.bg.subtle,
+            color: colors.text.primary,
+            border: `1px solid ${colors.border.default}`,
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          {copySuccess ? 'Copied!' : 'Copy Resume as Text'}
+        </button>
+      </div>
+
       <div
         style={{
           maxWidth: '850px',
@@ -79,6 +170,7 @@ export default function PreviewPage() {
       >
         {/* Resume Paper */}
         <div
+          className="resume-print-container"
           style={{
             backgroundColor: 'white',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -88,6 +180,7 @@ export default function PreviewPage() {
         >
           {/* Header */}
           <div
+            className="resume-section"
             style={{
               marginBottom: '30px',
               ...styles.header,
@@ -127,7 +220,7 @@ export default function PreviewPage() {
 
           {/* Summary */}
           {resume.summary && (
-            <div style={{ marginBottom: '28px' }}>
+            <div className="resume-section" style={{ marginBottom: '28px' }}>
               <h2
                 style={{
                   fontFamily: 'Georgia, serif',
@@ -158,7 +251,7 @@ export default function PreviewPage() {
 
           {/* Experience */}
           {resume.experience.length > 0 && (
-            <div style={{ marginBottom: '28px' }}>
+            <div className="resume-section" style={{ marginBottom: '28px' }}>
               <h2
                 style={{
                   fontFamily: 'Georgia, serif',
@@ -174,7 +267,7 @@ export default function PreviewPage() {
                 Professional Experience
               </h2>
               {resume.experience.map((exp, index) => (
-                <div key={exp.id} style={{ marginBottom: index < resume.experience.length - 1 ? '20px' : 0 }}>
+                <div key={exp.id} className="resume-item" style={{ marginBottom: index < resume.experience.length - 1 ? '20px' : 0 }}>
                   <div
                     style={{
                       display: 'flex',
@@ -234,7 +327,7 @@ export default function PreviewPage() {
 
           {/* Education */}
           {resume.education.length > 0 && (
-            <div style={{ marginBottom: '28px' }}>
+            <div className="resume-section" style={{ marginBottom: '28px' }}>
               <h2
                 style={{
                   fontFamily: 'Georgia, serif',
@@ -250,7 +343,7 @@ export default function PreviewPage() {
                 Education
               </h2>
               {resume.education.map((edu, index) => (
-                <div key={edu.id} style={{ marginBottom: index < resume.education.length - 1 ? '14px' : 0 }}>
+                <div key={edu.id} className="resume-item" style={{ marginBottom: index < resume.education.length - 1 ? '14px' : 0 }}>
                   <div
                     style={{
                       display: 'flex',
@@ -297,7 +390,7 @@ export default function PreviewPage() {
 
           {/* Projects */}
           {resume.projects.length > 0 && (
-            <div style={{ marginBottom: '28px' }}>
+            <div className="resume-section" style={{ marginBottom: '28px' }}>
               <h2
                 style={{
                   fontFamily: 'Georgia, serif',
@@ -313,7 +406,7 @@ export default function PreviewPage() {
                 Projects
               </h2>
               {resume.projects.map((proj, index) => (
-                <div key={proj.id} style={{ marginBottom: index < resume.projects.length - 1 ? '16px' : 0 }}>
+                <div key={proj.id} className="resume-item" style={{ marginBottom: index < resume.projects.length - 1 ? '16px' : 0 }}>
                   <h3
                     style={{
                       fontFamily: 'Georgia, serif',
@@ -354,7 +447,7 @@ export default function PreviewPage() {
 
           {/* Skills */}
           {resume.skills.length > 0 && (
-            <div>
+            <div className="resume-section">
               <h2
                 style={{
                   fontFamily: 'Georgia, serif',
