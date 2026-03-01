@@ -33,7 +33,7 @@ export default function Home() {
             lineHeight: '1.3',
           }}
         >
-          Stop Missing The Right Jobs.
+          Build a Resume That Gets Read.
         </h1>
         <p
           style={{
@@ -43,11 +43,11 @@ export default function Home() {
             marginBottom: spacing.xl,
           }}
         >
-          Precision-matched job discovery delivered daily at 9AM.
+          AI-powered resume builder designed for modern job seekers.
         </p>
-        <Link href="/settings">
+        <Link href="/builder">
           <Button variant="primary" size="md">
-            Start Tracking
+            Start Building
           </Button>
         </Link>
       </div>
