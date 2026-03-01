@@ -434,16 +434,16 @@ export default function PreviewPage() {
 
       <div
         style={{
-          maxWidth: '1000px',
+          maxWidth: '1200px',
           margin: '0 auto',
           padding: '20px',
-          display: 'grid',
-          gridTemplateColumns: '280px 1fr',
-          gap: '20px',
+          display: 'flex',
+          gap: '24px',
+          alignItems: 'flex-start',
         }}
       >
         {/* Left Panel - Controls */}
-        <div className="no-print">
+        <div className="no-print" style={{ width: '280px', flexShrink: 0 }}>
           {/* Template Picker */}
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <TemplatePicker
@@ -519,7 +519,7 @@ export default function PreviewPage() {
         </div>
 
         {/* Right Panel - Resume Preview */}
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           {layout === 'classic' && renderClassic()}
           {layout === 'modern' && renderModern()}
           {layout === 'minimal' && renderMinimal()}
