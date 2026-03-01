@@ -2,30 +2,61 @@
 
 import React, { useState, useEffect } from 'react'
 import { ResumeNav } from '../../components/ResumeNav'
-import { TemplateSwitcher } from '../../components/TemplateSwitcher'
+import { TemplatePicker } from '../../components/TemplatePicker'
+import { ColorThemePicker } from '../../components/ColorThemePicker'
 import { loadResumeData } from '../../utils/resumeStorage'
 import { ResumeData, defaultResumeData } from '../../types/resume'
-import { ResumeTemplate, getStoredTemplate } from '../../types/template'
-import { colors, spacing } from '../../styles/designTokens'
+import { colors } from '../../styles/designTokens'
 import { copyResumeAsText, validateResumeForExport, ValidationWarning } from '../../utils/resumeExport'
+import {
+  ResumeLayout,
+  ColorTheme,
+  getStoredLayout,
+  setStoredLayout,
+  getStoredColorTheme,
+  setStoredColorTheme,
+  generateColorVariations,
+  defaultLayout,
+  defaultColorTheme,
+} from '../../types/resumeTheme'
 
 export default function PreviewPage() {
   const [resume, setResume] = useState<ResumeData>(defaultResumeData)
-  const [template, setTemplate] = useState<ResumeTemplate>('classic')
+  const [layout, setLayout] = useState<ResumeLayout>(defaultLayout)
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(defaultColorTheme)
   const [warnings, setWarnings] = useState<ValidationWarning[]>([])
   const [copySuccess, setCopySuccess] = useState(false)
+  const [pdfToast, setPdfToast] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
     const loadedResume = loadResumeData()
     setResume(loadedResume)
-    setTemplate(getStoredTemplate())
+    setLayout(getStoredLayout())
+    setColorTheme(getStoredColorTheme())
     setWarnings(validateResumeForExport(loadedResume))
     setIsMounted(true)
   }, [])
 
+  const handleLayoutChange = (newLayout: ResumeLayout) => {
+    setLayout(newLayout)
+    setStoredLayout(newLayout)
+  }
+
+  const handleColorChange = (newTheme: ColorTheme) => {
+    setColorTheme(newTheme)
+    setStoredColorTheme(newTheme)
+  }
+
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleDownloadPDF = () => {
+    setPdfToast(true)
+    setTimeout(() => setPdfToast(false), 3000)
+    // Trigger print dialog for PDF export
+    setTimeout(() => window.print(), 100)
   }
 
   const handleCopyAsText = async () => {
@@ -38,495 +69,497 @@ export default function PreviewPage() {
 
   if (!isMounted) return null
 
-  // Template-specific styles
-  const getTemplateStyles = (template: ResumeTemplate) => {
-    switch (template) {
-      case 'modern':
-        return {
-          container: { padding: '50px', borderLeft: '4px solid #000' },
-          header: { textAlign: 'left' as const, borderBottom: '2px solid #000', paddingBottom: '20px' },
-          name: { fontSize: '36px', fontWeight: 700, letterSpacing: '0', textTransform: 'none' as const },
-          sectionTitle: { borderBottom: '2px solid #000', color: '#000' },
-        }
-      case 'minimal':
-        return {
-          container: { padding: '60px', border: 'none' },
-          header: { textAlign: 'center' as const, borderBottom: 'none', paddingBottom: '30px' },
-          name: { fontSize: '28px', fontWeight: 400, letterSpacing: '4px', textTransform: 'uppercase' as const },
-          sectionTitle: { borderBottom: 'none', borderTop: '1px solid #ccc', paddingTop: '10px', color: '#555' },
-        }
-      default: // classic
-        return {
-          container: { padding: '60px', border: 'none' },
-          header: { textAlign: 'center' as const, borderBottom: '1px solid #000', paddingBottom: '20px' },
-          name: { fontSize: '32px', fontWeight: 400, letterSpacing: '2px', textTransform: 'uppercase' as const },
-          sectionTitle: { borderBottom: '1px solid #ccc', color: '#000' },
-        }
-    }
-  }
+  const colorVars = generateColorVariations(colorTheme)
 
-  const styles = getTemplateStyles(template)
-
-  return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      <ResumeNav />
-
-      {/* Template Switcher */}
-      <div
-        className="template-switcher no-print"
-        style={{
-          maxWidth: '850px',
-          margin: '0 auto',
-          padding: '20px 20px 0',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <TemplateSwitcher
-          currentTemplate={template}
-          onTemplateChange={setTemplate}
-        />
+  // Classic Layout
+  const renderClassic = () => (
+    <div
+      className="resume-print-container"
+      style={{
+        backgroundColor: 'white',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        minHeight: '1100px',
+        padding: '60px',
+        fontFamily: 'Georgia, "Times New Roman", serif',
+      }}
+    >
+      {/* Header */}
+      <div className="resume-section" style={{ textAlign: 'center', marginBottom: '30px', borderBottom: `2px solid ${colorVars.primary}`, paddingBottom: '20px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 400, letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 12px 0', color: '#000' }}>
+          {resume.personalInfo.name || 'Your Name'}
+        </h1>
+        <p style={{ fontSize: '13px', color: '#333', margin: '0 0 4px 0' }}>
+          {resume.personalInfo.location} | {resume.personalInfo.email} | {resume.personalInfo.phone}
+        </p>
+        <p style={{ fontSize: '12px', color: '#555', margin: 0 }}>
+          {resume.links.linkedin} | {resume.links.github}
+        </p>
       </div>
 
-      {/* Validation Warnings */}
-      {warnings.length > 0 && (
-        <div
-          className="validation-warnings no-print"
-          style={{
-            maxWidth: '850px',
-            margin: '16px auto 0',
-            padding: '0 20px',
-          }}
-        >
-          {warnings.map((warning, index) => (
-            <div
-              key={index}
-              style={{
-                backgroundColor: colors.semantic.warning + '15',
-                border: `1px solid ${colors.semantic.warning}`,
-                borderRadius: '4px',
-                padding: '12px 16px',
-                marginBottom: '8px',
-                fontSize: '14px',
-                color: colors.semantic.warning,
-              }}
-            >
-              {warning.message}
+      {/* Summary */}
+      {resume.summary && (
+        <div className="resume-section" style={{ marginBottom: '28px' }}>
+          <h2 style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px', paddingBottom: '6px', marginBottom: '12px', borderBottom: `1px solid ${colorVars.primary}`, color: colorVars.primary }}>
+            Professional Summary
+          </h2>
+          <p style={{ fontSize: '13px', color: '#333', lineHeight: '1.7', margin: 0 }}>{resume.summary}</p>
+        </div>
+      )}
+
+      {/* Experience */}
+      {resume.experience.length > 0 && (
+        <div className="resume-section" style={{ marginBottom: '28px' }}>
+          <h2 style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px', paddingBottom: '6px', marginBottom: '16px', borderBottom: `1px solid ${colorVars.primary}`, color: colorVars.primary }}>
+            Professional Experience
+          </h2>
+          {resume.experience.map((exp) => (
+            <div key={exp.id} className="resume-item" style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: 0 }}>{exp.role}</h3>
+                <span style={{ fontSize: '12px', color: '#555', fontStyle: 'italic' }}>{exp.startDate} - {exp.endDate}</span>
+              </div>
+              <p style={{ fontSize: '13px', color: '#333', margin: '0 0 6px 0', fontStyle: 'italic' }}>{exp.company}</p>
+              <p style={{ fontSize: '12px', color: '#444', lineHeight: '1.6', margin: 0 }}>{exp.description}</p>
             </div>
           ))}
         </div>
       )}
 
-      {/* Export Buttons */}
-      <div
-        className="export-buttons no-print"
-        style={{
-          maxWidth: '850px',
-          margin: '16px auto 0',
-          padding: '0 20px',
-          display: 'flex',
-          gap: '12px',
-          justifyContent: 'center',
-        }}
-      >
-        <button
-          onClick={handlePrint}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: colors.accent,
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
-        >
-          Print / Save as PDF
-        </button>
-        <button
-          onClick={handleCopyAsText}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: colors.bg.subtle,
-            color: colors.text.primary,
-            border: `1px solid ${colors.border.default}`,
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
-        >
-          {copySuccess ? 'Copied!' : 'Copy Resume as Text'}
-        </button>
+      {/* Education */}
+      {resume.education.length > 0 && (
+        <div className="resume-section" style={{ marginBottom: '28px' }}>
+          <h2 style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px', paddingBottom: '6px', marginBottom: '16px', borderBottom: `1px solid ${colorVars.primary}`, color: colorVars.primary }}>
+            Education
+          </h2>
+          {resume.education.map((edu) => (
+            <div key={edu.id} className="resume-item" style={{ marginBottom: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: 0 }}>{edu.school}</h3>
+                <span style={{ fontSize: '12px', color: '#555', fontStyle: 'italic' }}>{edu.startDate} - {edu.endDate}</span>
+              </div>
+              <p style={{ fontSize: '13px', color: '#333', margin: 0 }}>{edu.degree}{edu.degree && edu.field ? ', ' : ''}{edu.field}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Projects */}
+      {resume.projects.length > 0 && (
+        <div className="resume-section" style={{ marginBottom: '28px' }}>
+          <h2 style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px', paddingBottom: '6px', marginBottom: '16px', borderBottom: `1px solid ${colorVars.primary}`, color: colorVars.primary }}>
+            Projects
+          </h2>
+          {resume.projects.map((proj) => (
+            <div key={proj.id} className="resume-item" style={{ marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#000', margin: '0 0 4px 0' }}>{proj.name}</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                {(Array.isArray(proj.technologies) ? proj.technologies : []).map((tech) => (
+                  <span key={tech} style={{ padding: '2px 8px', backgroundColor: '#f0f0f0', borderRadius: '4px', fontSize: '10px', color: '#333' }}>{tech}</span>
+                ))}
+              </div>
+              <p style={{ fontSize: '12px', color: '#444', lineHeight: '1.6', margin: '0 0 6px 0' }}>{proj.description}</p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {proj.liveUrl && <span style={{ fontSize: '11px', color: '#666' }}>Live: {proj.liveUrl}</span>}
+                {proj.githubUrl && <span style={{ fontSize: '11px', color: '#666' }}>GitHub: {proj.githubUrl}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Skills */}
+      {(resume.skills.technical.length > 0 || resume.skills.soft.length > 0 || resume.skills.tools.length > 0) && (
+        <div className="resume-section">
+          <h2 style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px', paddingBottom: '6px', marginBottom: '12px', borderBottom: `1px solid ${colorVars.primary}`, color: colorVars.primary }}>
+            Skills
+          </h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {resume.skills.technical.map((skill) => (
+              <span key={skill} style={{ padding: '4px 10px', backgroundColor: colorVars.primary, color: '#fff', borderRadius: '4px', fontSize: '11px' }}>{skill}</span>
+            ))}
+            {resume.skills.soft.map((skill) => (
+              <span key={skill} style={{ padding: '4px 10px', backgroundColor: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', fontSize: '11px' }}>{skill}</span>
+            ))}
+            {resume.skills.tools.map((skill) => (
+              <span key={skill} style={{ padding: '4px 10px', backgroundColor: '#fff', border: `1px solid ${colorVars.primary}`, borderRadius: '4px', fontSize: '11px' }}>{skill}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  // Modern Layout
+  const renderModern = () => (
+    <div
+      className="resume-print-container"
+      style={{
+        backgroundColor: 'white',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        minHeight: '1100px',
+        display: 'flex',
+        fontFamily: '"Segoe UI", Roboto, sans-serif',
+      }}
+    >
+      {/* Sidebar */}
+      <div style={{ width: '35%', backgroundColor: colorVars.sidebarBg, padding: '40px 24px', color: '#333' }}>
+        {/* Name */}
+        <div style={{ marginBottom: '30px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 8px 0', color: colorVars.primaryDark, lineHeight: '1.2' }}>
+            {resume.personalInfo.name || 'Your Name'}
+          </h1>
+          <p style={{ fontSize: '12px', color: '#555', margin: 0 }}>{resume.personalInfo.location}</p>
+        </div>
+
+        {/* Contact */}
+        <div style={{ marginBottom: '30px' }}>
+          <h2 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', color: colorVars.primary }}>Contact</h2>
+          <p style={{ fontSize: '11px', margin: '0 0 4px 0', wordBreak: 'break-word' }}>{resume.personalInfo.email}</p>
+          <p style={{ fontSize: '11px', margin: '0 0 4px 0' }}>{resume.personalInfo.phone}</p>
+          {resume.links.linkedin && <p style={{ fontSize: '11px', margin: '0 0 4px 0' }}>LinkedIn: {resume.links.linkedin}</p>}
+          {resume.links.github && <p style={{ fontSize: '11px', margin: 0 }}>GitHub: {resume.links.github}</p>}
+        </div>
+
+        {/* Skills */}
+        {(resume.skills.technical.length > 0 || resume.skills.soft.length > 0 || resume.skills.tools.length > 0) && (
+          <div style={{ marginBottom: '30px' }}>
+            <h2 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', color: colorVars.primary }}>Skills</h2>
+            {resume.skills.technical.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <p style={{ fontSize: '10px', fontWeight: 600, margin: '0 0 6px 0', color: '#444' }}>Technical</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  {resume.skills.technical.map((skill) => (
+                    <span key={skill} style={{ padding: '2px 6px', backgroundColor: colorVars.primary, color: '#fff', borderRadius: '3px', fontSize: '10px' }}>{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {resume.skills.soft.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <p style={{ fontSize: '10px', fontWeight: 600, margin: '0 0 6px 0', color: '#444' }}>Soft Skills</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  {resume.skills.soft.map((skill) => (
+                    <span key={skill} style={{ padding: '2px 6px', backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: '3px', fontSize: '10px' }}>{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {resume.skills.tools.length > 0 && (
+              <div>
+                <p style={{ fontSize: '10px', fontWeight: 600, margin: '0 0 6px 0', color: '#444' }}>Tools</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  {resume.skills.tools.map((skill) => (
+                    <span key={skill} style={{ padding: '2px 6px', backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: '3px', fontSize: '10px' }}>{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Education */}
+        {resume.education.length > 0 && (
+          <div>
+            <h2 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', color: colorVars.primary }}>Education</h2>
+            {resume.education.map((edu) => (
+              <div key={edu.id} style={{ marginBottom: '12px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, margin: '0 0 2px 0' }}>{edu.school}</p>
+                <p style={{ fontSize: '10px', margin: '0 0 2px 0' }}>{edu.degree}{edu.field ? `, ${edu.field}` : ''}</p>
+                <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>{edu.startDate} - {edu.endDate}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div
-        style={{
-          maxWidth: '850px',
-          margin: '0 auto',
-          padding: '20px 20px 40px',
-        }}
-      >
-        {/* Resume Paper */}
-        <div
-          className="resume-print-container"
-          style={{
-            backgroundColor: 'white',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            minHeight: '1100px',
-            ...styles.container,
-          }}
-        >
-          {/* Header */}
-          <div
-            className="resume-section"
-            style={{
-              marginBottom: '30px',
-              ...styles.header,
-            }}
-          >
-            <h1
-              style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
-                color: '#000',
-                margin: '0 0 12px 0',
-                ...styles.name,
-              }}
-            >
-              {resume.personalInfo.name || 'Your Name'}
-            </h1>
-            <p
-              style={{
-                fontSize: '13px',
-                color: '#333',
-                margin: '0 0 4px 0',
-                fontFamily: 'Georgia, serif',
-              }}
-            >
-              {resume.personalInfo.location} | {resume.personalInfo.email} | {resume.personalInfo.phone}
-            </p>
-            <p
-              style={{
-                fontSize: '12px',
-                color: '#555',
-                margin: 0,
-                fontFamily: 'Georgia, serif',
-              }}
-            >
-              {resume.links.linkedin} | {resume.links.github}
-            </p>
+      {/* Main Content */}
+      <div style={{ flex: 1, padding: '40px' }}>
+        {/* Summary */}
+        {resume.summary && (
+          <div style={{ marginBottom: '30px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', color: colorVars.primary, borderBottom: `2px solid ${colorVars.primary}`, paddingBottom: '6px' }}>
+              Profile
+            </h2>
+            <p style={{ fontSize: '12px', color: '#444', lineHeight: '1.6', margin: 0 }}>{resume.summary}</p>
           </div>
+        )}
 
-          {/* Summary */}
-          {resume.summary && (
-            <div className="resume-section" style={{ marginBottom: '28px' }}>
-              <h2
-                style={{
-                  fontFamily: 'Georgia, serif',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '2px',
-                  paddingBottom: '6px',
-                  marginBottom: '12px',
-                  ...styles.sectionTitle,
-                }}
-              >
-                Professional Summary
-              </h2>
-              <p
-                style={{
-                  fontSize: '13px',
-                  color: '#333',
-                  lineHeight: '1.7',
-                  margin: 0,
-                  fontFamily: 'Georgia, serif',
-                }}
-              >
-                {resume.summary}
-              </p>
-            </div>
-          )}
-
-          {/* Experience */}
-          {resume.experience.length > 0 && (
-            <div className="resume-section" style={{ marginBottom: '28px' }}>
-              <h2
-                style={{
-                  fontFamily: 'Georgia, serif',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '2px',
-                  paddingBottom: '6px',
-                  marginBottom: '16px',
-                  ...styles.sectionTitle,
-                }}
-              >
-                Professional Experience
-              </h2>
-              {resume.experience.map((exp, index) => (
-                <div key={exp.id} className="resume-item" style={{ marginBottom: index < resume.experience.length - 1 ? '20px' : 0 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'baseline',
-                      marginBottom: '2px',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontFamily: 'Georgia, serif',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: '#000',
-                        margin: 0,
-                      }}
-                    >
-                      {exp.role}
-                    </h3>
-                    <span
-                      style={{
-                        fontSize: '12px',
-                        color: '#555',
-                        fontFamily: 'Georgia, serif',
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      {exp.startDate} – {exp.endDate}
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: '#333',
-                      margin: '0 0 6px 0',
-                      fontFamily: 'Georgia, serif',
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    {exp.company}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: '12px',
-                      color: '#444',
-                      lineHeight: '1.6',
-                      margin: 0,
-                      fontFamily: 'Georgia, serif',
-                    }}
-                  >
-                    {exp.description}
-                  </p>
+        {/* Experience */}
+        {resume.experience.length > 0 && (
+          <div style={{ marginBottom: '30px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', color: colorVars.primary, borderBottom: `2px solid ${colorVars.primary}`, paddingBottom: '6px' }}>
+              Experience
+            </h2>
+            {resume.experience.map((exp) => (
+              <div key={exp.id} style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#000', margin: 0 }}>{exp.role}</h3>
+                  <span style={{ fontSize: '11px', color: '#666' }}>{exp.startDate} - {exp.endDate}</span>
                 </div>
-              ))}
-            </div>
-          )}
+                <p style={{ fontSize: '12px', fontWeight: 600, color: colorVars.primary, margin: '0 0 6px 0' }}>{exp.company}</p>
+                <p style={{ fontSize: '11px', color: '#444', lineHeight: '1.6', margin: 0 }}>{exp.description}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
-          {/* Education */}
-          {resume.education.length > 0 && (
-            <div className="resume-section" style={{ marginBottom: '28px' }}>
-              <h2
-                style={{
-                  fontFamily: 'Georgia, serif',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '2px',
-                  paddingBottom: '6px',
-                  marginBottom: '16px',
-                  ...styles.sectionTitle,
-                }}
-              >
-                Education
-              </h2>
-              {resume.education.map((edu, index) => (
-                <div key={edu.id} className="resume-item" style={{ marginBottom: index < resume.education.length - 1 ? '14px' : 0 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'baseline',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontFamily: 'Georgia, serif',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: '#000',
-                        margin: 0,
-                      }}
-                    >
-                      {edu.school}
-                    </h3>
-                    <span
-                      style={{
-                        fontSize: '12px',
-                        color: '#555',
-                        fontFamily: 'Georgia, serif',
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      {edu.startDate} – {edu.endDate}
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: '#333',
-                      margin: '2px 0 0 0',
-                      fontFamily: 'Georgia, serif',
-                    }}
-                  >
-                    {edu.degree}{edu.degree && edu.field && ', '}{edu.field}
-                  </p>
+        {/* Projects */}
+        {resume.projects.length > 0 && (
+          <div>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', color: colorVars.primary, borderBottom: `2px solid ${colorVars.primary}`, paddingBottom: '6px' }}>
+              Projects
+            </h2>
+            {resume.projects.map((proj) => (
+              <div key={proj.id} style={{ marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#000', margin: '0 0 6px 0' }}>{proj.name}</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
+                  {(Array.isArray(proj.technologies) ? proj.technologies : []).map((tech) => (
+                    <span key={tech} style={{ padding: '2px 6px', backgroundColor: colorVars.primaryMuted, borderRadius: '3px', fontSize: '10px', color: colorVars.primaryDark }}>{tech}</span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Projects */}
-          {resume.projects.length > 0 && (
-            <div className="resume-section" style={{ marginBottom: '28px' }}>
-              <h2
-                style={{
-                  fontFamily: 'Georgia, serif',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '2px',
-                  paddingBottom: '6px',
-                  marginBottom: '16px',
-                  ...styles.sectionTitle,
-                }}
-              >
-                Projects
-              </h2>
-              {resume.projects.map((proj, index) => (
-                <div key={proj.id} className="resume-item" style={{ marginBottom: index < resume.projects.length - 1 ? '16px' : 0 }}>
-                  <h3
-                    style={{
-                      fontFamily: 'Georgia, serif',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: '#000',
-                      margin: '0 0 4px 0',
-                    }}
-                  >
-                    {proj.name}
-                  </h3>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-                    {(Array.isArray(proj.technologies) ? proj.technologies : []).map((tech) => (
-                      <span
-                        key={tech}
-                        style={{
-                          padding: '2px 8px',
-                          backgroundColor: '#f0f0f0',
-                          borderRadius: '4px',
-                          fontSize: '10px',
-                          color: '#333',
-                        }}
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                  <p
-                    style={{
-                      fontSize: '12px',
-                      color: '#444',
-                      lineHeight: '1.6',
-                      margin: '0 0 6px 0',
-                      fontFamily: 'Georgia, serif',
-                    }}
-                  >
-                    {proj.description}
-                  </p>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    {proj.liveUrl && (
-                      <span style={{ fontSize: '11px', color: '#666' }}>
-                        Live: {proj.liveUrl}
-                      </span>
-                    )}
-                    {proj.githubUrl && (
-                      <span style={{ fontSize: '11px', color: '#666' }}>
-                        GitHub: {proj.githubUrl}
-                      </span>
-                    )}
-                  </div>
+                <p style={{ fontSize: '11px', color: '#444', lineHeight: '1.6', margin: '0 0 4px 0' }}>{proj.description}</p>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  {proj.liveUrl && <span style={{ fontSize: '10px', color: colorVars.primary }}>Live: {proj.liveUrl}</span>}
+                  {proj.githubUrl && <span style={{ fontSize: '10px', color: colorVars.primary }}>GitHub: {proj.githubUrl}</span>}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 
-          {/* Skills */}
-          {(resume.skills.technical.length > 0 || resume.skills.soft.length > 0 || resume.skills.tools.length > 0) && (
-            <div className="resume-section">
-              <h2
-                style={{
-                  fontFamily: 'Georgia, serif',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '2px',
-                  paddingBottom: '6px',
-                  marginBottom: '12px',
-                  ...styles.sectionTitle,
-                }}
-              >
-                Skills
-              </h2>
+  // Minimal Layout
+  const renderMinimal = () => (
+    <div
+      className="resume-print-container"
+      style={{
+        backgroundColor: 'white',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        minHeight: '1100px',
+        padding: '80px 60px',
+        fontFamily: '"Helvetica Neue", Arial, sans-serif',
+      }}
+    >
+      {/* Header */}
+      <div className="resume-section" style={{ marginBottom: '50px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 300, letterSpacing: '4px', textTransform: 'uppercase', margin: '0 0 20px 0', color: '#000' }}>
+          {resume.personalInfo.name || 'Your Name'}
+        </h1>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', fontSize: '12px', color: '#666' }}>
+          {resume.personalInfo.location && <span>{resume.personalInfo.location}</span>}
+          {resume.personalInfo.email && <span>{resume.personalInfo.email}</span>}
+          {resume.personalInfo.phone && <span>{resume.personalInfo.phone}</span>}
+          {resume.links.linkedin && <span>{resume.links.linkedin}</span>}
+          {resume.links.github && <span>{resume.links.github}</span>}
+        </div>
+      </div>
+
+      {/* Summary */}
+      {resume.summary && (
+        <div className="resume-section" style={{ marginBottom: '40px' }}>
+          <p style={{ fontSize: '14px', color: '#333', lineHeight: '1.8', margin: 0, fontWeight: 300 }}>{resume.summary}</p>
+        </div>
+      )}
+
+      {/* Experience */}
+      {resume.experience.length > 0 && (
+        <div className="resume-section" style={{ marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '24px', color: '#999' }}>Experience</h2>
+          {resume.experience.map((exp) => (
+            <div key={exp.id} className="resume-item" style={{ marginBottom: '28px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 500, color: '#000', margin: 0 }}>{exp.role}</h3>
+                <span style={{ fontSize: '11px', color: '#999', letterSpacing: '1px' }}>{exp.startDate} — {exp.endDate}</span>
+              </div>
+              <p style={{ fontSize: '12px', color: colorVars.primary, margin: '0 0 10px 0', fontWeight: 500 }}>{exp.company}</p>
+              <p style={{ fontSize: '13px', color: '#555', lineHeight: '1.7', margin: 0, fontWeight: 300 }}>{exp.description}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Education */}
+      {resume.education.length > 0 && (
+        <div className="resume-section" style={{ marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '24px', color: '#999' }}>Education</h2>
+          {resume.education.map((edu) => (
+            <div key={edu.id} className="resume-item" style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 500, color: '#000', margin: 0 }}>{edu.school}</h3>
+                <span style={{ fontSize: '11px', color: '#999', letterSpacing: '1px' }}>{edu.startDate} — {edu.endDate}</span>
+              </div>
+              <p style={{ fontSize: '13px', color: '#555', margin: '6px 0 0 0', fontWeight: 300 }}>{edu.degree}{edu.field ? `, ${edu.field}` : ''}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Projects */}
+      {resume.projects.length > 0 && (
+        <div className="resume-section" style={{ marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '24px', color: '#999' }}>Projects</h2>
+          {resume.projects.map((proj) => (
+            <div key={proj.id} className="resume-item" style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 500, color: '#000', margin: '0 0 8px 0' }}>{proj.name}</h3>
+              <p style={{ fontSize: '13px', color: '#555', lineHeight: '1.7', margin: '0 0 10px 0', fontWeight: 300 }}>{proj.description}</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {resume.skills.technical.map((skill) => (
-                  <span
-                    key={skill}
-                    style={{
-                      padding: '4px 10px',
-                      backgroundColor: '#000',
-                      color: '#fff',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                    }}
-                  >
-                    {skill}
-                  </span>
-                ))}
-                {resume.skills.soft.map((skill) => (
-                  <span
-                    key={skill}
-                    style={{
-                      padding: '4px 10px',
-                      backgroundColor: '#f0f0f0',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                    }}
-                  >
-                    {skill}
-                  </span>
-                ))}
-                {resume.skills.tools.map((skill) => (
-                  <span
-                    key={skill}
-                    style={{
-                      padding: '4px 10px',
-                      backgroundColor: '#fff',
-                      border: '1px solid #000',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                    }}
-                  >
-                    {skill}
-                  </span>
+                {(Array.isArray(proj.technologies) ? proj.technologies : []).map((tech) => (
+                  <span key={tech} style={{ fontSize: '11px', color: colorVars.primary, fontWeight: 500 }}>{tech}</span>
                 ))}
               </div>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* Skills */}
+      {(resume.skills.technical.length > 0 || resume.skills.soft.length > 0 || resume.skills.tools.length > 0) && (
+        <div className="resume-section">
+          <h2 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '24px', color: '#999' }}>Skills</h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+            {[...resume.skills.technical, ...resume.skills.soft, ...resume.skills.tools].map((skill) => (
+              <span key={skill} style={{ fontSize: '13px', color: '#333', fontWeight: 300 }}>{skill}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+      <ResumeNav />
+
+      <div
+        style={{
+          maxWidth: '1000px',
+          margin: '0 auto',
+          padding: '20px',
+          display: 'grid',
+          gridTemplateColumns: '280px 1fr',
+          gap: '20px',
+        }}
+      >
+        {/* Left Panel - Controls */}
+        <div className="no-print">
+          {/* Template Picker */}
+          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <TemplatePicker
+              currentLayout={layout}
+              onLayoutChange={handleLayoutChange}
+              accentColor={colorVars.primary}
+            />
+          </div>
+
+          {/* Color Theme Picker */}
+          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <ColorThemePicker
+              currentTheme={colorTheme}
+              onThemeChange={handleColorChange}
+            />
+          </div>
+
+          {/* Validation Warnings */}
+          {warnings.length > 0 && (
+            <div style={{ marginBottom: '16px' }}>
+              {warnings.map((warning, index) => (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: '#fff3cd',
+                    border: '1px solid #ffc107',
+                    borderRadius: '4px',
+                    padding: '12px 16px',
+                    marginBottom: '8px',
+                    fontSize: '13px',
+                    color: '#856404',
+                  }}
+                >
+                  {warning.message}
+                </div>
+              ))}
+            </div>
           )}
+
+          {/* Export Buttons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button
+              onClick={handleDownloadPDF}
+              style={{
+                padding: '12px 20px',
+                backgroundColor: colorVars.primary,
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Download PDF
+            </button>
+            <button
+              onClick={handleCopyAsText}
+              style={{
+                padding: '12px 20px',
+                backgroundColor: '#f8f9fa',
+                color: '#333',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              {copySuccess ? 'Copied!' : 'Copy as Text'}
+            </button>
+          </div>
+        </div>
+
+        {/* Right Panel - Resume Preview */}
+        <div>
+          {layout === 'classic' && renderClassic()}
+          {layout === 'modern' && renderModern()}
+          {layout === 'minimal' && renderMinimal()}
         </div>
       </div>
+
+      {/* PDF Toast Notification */}
+      {pdfToast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            padding: '16px 24px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            fontSize: '14px',
+            fontWeight: 500,
+            zIndex: 1000,
+            animation: 'slideIn 0.3s ease-out',
+          }}
+        >
+          PDF export ready! Check your downloads.
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   )
 }
