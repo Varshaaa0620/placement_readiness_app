@@ -413,40 +413,57 @@ export default function PreviewPage() {
                       fontSize: '14px',
                       fontWeight: 600,
                       color: '#000',
-                      margin: '0 0 2px 0',
+                      margin: '0 0 4px 0',
                     }}
                   >
                     {proj.name}
                   </h3>
-                  <p
-                    style={{
-                      fontSize: '11px',
-                      color: '#666',
-                      margin: '0 0 4px 0',
-                      fontFamily: 'Georgia, serif',
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    {proj.technologies}
-                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                    {proj.technologies.map((tech) => (
+                      <span
+                        key={tech}
+                        style={{
+                          padding: '2px 8px',
+                          backgroundColor: '#f0f0f0',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          color: '#333',
+                        }}
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
                   <p
                     style={{
                       fontSize: '12px',
                       color: '#444',
                       lineHeight: '1.6',
-                      margin: 0,
+                      margin: '0 0 6px 0',
                       fontFamily: 'Georgia, serif',
                     }}
                   >
                     {proj.description}
                   </p>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    {proj.liveUrl && (
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        Live: {proj.liveUrl}
+                      </span>
+                    )}
+                    {proj.githubUrl && (
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        GitHub: {proj.githubUrl}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
 
           {/* Skills */}
-          {resume.skills.length > 0 && (
+          {(resume.skills.technical.length > 0 || resume.skills.soft.length > 0 || resume.skills.tools.length > 0) && (
             <div className="resume-section">
               <h2
                 style={{
@@ -462,17 +479,50 @@ export default function PreviewPage() {
               >
                 Skills
               </h2>
-              <p
-                style={{
-                  fontSize: '13px',
-                  color: '#333',
-                  lineHeight: '1.6',
-                  margin: 0,
-                  fontFamily: 'Georgia, serif',
-                }}
-              >
-                {resume.skills.join(' • ')}
-              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {resume.skills.technical.map((skill) => (
+                  <span
+                    key={skill}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#000',
+                      color: '#fff',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {skill}
+                  </span>
+                ))}
+                {resume.skills.soft.map((skill) => (
+                  <span
+                    key={skill}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#f0f0f0',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {skill}
+                  </span>
+                ))}
+                {resume.skills.tools.map((skill) => (
+                  <span
+                    key={skill}
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: '#fff',
+                      border: '1px solid #000',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>

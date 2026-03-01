@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { ResumeNav } from '../../components/ResumeNav'
 import { TemplateSwitcher } from '../../components/TemplateSwitcher'
+import { SkillsAccordion } from '../../components/SkillsAccordion'
+import { ProjectsAccordion } from '../../components/ProjectsAccordion'
 import { colors, spacing } from '../../styles/designTokens'
 import { ResumeData, defaultResumeData, sampleResumeData, Education, Experience, Project } from '../../types/resume'
 import { ResumeTemplate, getStoredTemplate, setStoredTemplate } from '../../types/template'
@@ -103,12 +105,12 @@ export default function BuilderPage() {
       id: Date.now().toString(),
       name: '',
       description: '',
-      technologies: '',
+      technologies: [],
     }
     setResume((prev) => ({ ...prev, projects: [...prev.projects, newProject] }))
   }
 
-  const updateProject = (id: string, field: keyof Project, value: string) => {
+  const updateProject = (id: string, field: keyof Project, value: string | string[]) => {
     setResume((prev) => ({
       ...prev,
       projects: prev.projects.map((proj) => (proj.id === id ? { ...proj, [field]: value } : proj)),
@@ -119,9 +121,12 @@ export default function BuilderPage() {
     setResume((prev) => ({ ...prev, projects: prev.projects.filter((proj) => proj.id !== id) }))
   }
 
-  const handleSkillsChange = (value: string) => {
-    const skills = value.split(',').map((s) => s.trim()).filter(Boolean)
+  const handleSkillsChange = (skills: ResumeData['skills']) => {
     setResume((prev) => ({ ...prev, skills }))
+  }
+
+  const handleProjectsChange = (projects: Project[]) => {
+    setResume((prev) => ({ ...prev, projects }))
   }
 
   const loadSampleData = () => {
@@ -436,20 +441,6 @@ export default function BuilderPage() {
                     ))}
                   </div>
                 )}
-                <input
-                  type="text"
-                  placeholder="Technologies used (comma separated)"
-                  value={proj.technologies}
-                  onChange={(e) => updateProject(proj.id, 'technologies', e.target.value)}
-                  style={{ ...inputStyle, marginBottom: spacing.xs }}
-                />
-                <input
-                  type="text"
-                  placeholder="Project Link (optional)"
-                  value={proj.link || ''}
-                  onChange={(e) => updateProject(proj.id, 'link', e.target.value)}
-                  style={{ ...inputStyle, marginBottom: 0 }}
-                />
                 <button onClick={() => removeProject(proj.id)} style={{ ...secondaryButtonStyle, marginTop: spacing.xs, fontSize: '12px' }}>
                   Remove
                 </button>
@@ -460,16 +451,13 @@ export default function BuilderPage() {
           {/* Skills */}
           <div style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Skills</h2>
-            <input
-              type="text"
-              value={resume.skills.join(', ')}
-              onChange={(e) => handleSkillsChange(e.target.value)}
-              placeholder="React, TypeScript, Node.js, Python..."
-              style={inputStyle}
-            />
-            <p style={{ fontSize: '13px', color: colors.text.tertiary, margin: 0 }}>
-              Separate skills with commas
-            </p>
+            <SkillsAccordion skills={resume.skills} onChange={handleSkillsChange} />
+          </div>
+
+          {/* Projects */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Projects</h2>
+            <ProjectsAccordion projects={resume.projects} onChange={handleProjectsChange} />
           </div>
 
           {/* Links */}
@@ -826,23 +814,48 @@ export default function BuilderPage() {
                     Projects
                   </h2>
                   {resume.projects.map((proj) => (
-                    <div key={proj.id} style={{ marginBottom: spacing.sm }}>
+                    <div key={proj.id} style={{ marginBottom: spacing.sm, padding: spacing.sm, backgroundColor: colors.bg.subtle, borderRadius: '6px' }}>
                       <h3 style={{ fontSize: '15px', fontWeight: 600, color: colors.text.primary, margin: 0 }}>
                         {proj.name || 'Project Name'}
                       </h3>
-                      <p style={{ fontSize: '13px', color: colors.text.tertiary, margin: 0 }}>
-                        {proj.technologies}
-                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                        {proj.technologies.map((tech) => (
+                          <span
+                            key={tech}
+                            style={{
+                              padding: '2px 8px',
+                              backgroundColor: colors.accent,
+                              color: 'white',
+                              borderRadius: '10px',
+                              fontSize: '11px',
+                            }}
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
                       <p style={{ fontSize: '13px', color: colors.text.secondary, lineHeight: '1.5', marginTop: spacing.xs }}>
                         {proj.description}
                       </p>
+                      <div style={{ display: 'flex', gap: '12px', marginTop: spacing.xs }}>
+                        {proj.liveUrl && (
+                          <a href={proj.liveUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: colors.accent }}>
+                            Live Demo →
+                          </a>
+                        )}
+                        {proj.githubUrl && (
+                          <a href={proj.githubUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: colors.accent }}>
+                            GitHub →
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
 
               {/* Skills */}
-              {resume.skills.length > 0 && (
+              {(resume.skills.technical.length > 0 || resume.skills.soft.length > 0 || resume.skills.tools.length > 0) && (
                 <div>
                   <h2
                     style={{
@@ -858,9 +871,51 @@ export default function BuilderPage() {
                   >
                     Skills
                   </h2>
-                  <p style={{ fontSize: '14px', color: colors.text.secondary, margin: 0 }}>
-                    {resume.skills.join(' • ')}
-                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {resume.skills.technical.map((skill) => (
+                      <span
+                        key={skill}
+                        style={{
+                          padding: '4px 12px',
+                          backgroundColor: colors.accent,
+                          color: 'white',
+                          borderRadius: '12px',
+                          fontSize: '13px',
+                        }}
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                    {resume.skills.soft.map((skill) => (
+                      <span
+                        key={skill}
+                        style={{
+                          padding: '4px 12px',
+                          backgroundColor: colors.bg.subtle,
+                          color: colors.text.primary,
+                          border: `1px solid ${colors.border.default}`,
+                          borderRadius: '12px',
+                          fontSize: '13px',
+                        }}
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                    {resume.skills.tools.map((skill) => (
+                      <span
+                        key={skill}
+                        style={{
+                          padding: '4px 12px',
+                          backgroundColor: colors.text.primary,
+                          color: 'white',
+                          borderRadius: '12px',
+                          fontSize: '13px',
+                        }}
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -870,7 +925,9 @@ export default function BuilderPage() {
                 resume.experience.length === 0 &&
                 resume.education.length === 0 &&
                 resume.projects.length === 0 &&
-                resume.skills.length === 0 && (
+                resume.skills.technical.length === 0 &&
+                resume.skills.soft.length === 0 &&
+                resume.skills.tools.length === 0 && (
                   <div style={{ textAlign: 'center', padding: spacing.xl, color: colors.text.tertiary }}>
                     <p>Start filling out the form to see your resume preview</p>
                   </div>

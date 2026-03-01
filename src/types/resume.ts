@@ -27,13 +27,20 @@ export interface Project {
   id: string
   name: string
   description: string
-  technologies: string
-  link?: string
+  technologies: string[]
+  liveUrl?: string
+  githubUrl?: string
 }
 
 export interface Links {
   github: string
   linkedin: string
+}
+
+export interface CategorizedSkills {
+  technical: string[]
+  soft: string[]
+  tools: string[]
 }
 
 export interface ResumeData {
@@ -42,7 +49,7 @@ export interface ResumeData {
   education: Education[]
   experience: Experience[]
   projects: Project[]
-  skills: string[]
+  skills: CategorizedSkills
   links: Links
 }
 
@@ -57,7 +64,11 @@ export const defaultResumeData: ResumeData = {
   education: [],
   experience: [],
   projects: [],
-  skills: [],
+  skills: {
+    technical: [],
+    soft: [],
+    tools: [],
+  },
   links: {
     github: '',
     linkedin: '',
@@ -105,11 +116,15 @@ export const sampleResumeData: ResumeData = {
       id: '1',
       name: 'Open Source Dashboard',
       description: 'Real-time analytics dashboard for monitoring system metrics.',
-      technologies: 'React, TypeScript, D3.js',
-      link: 'github.com/alex/dashboard',
+      technologies: ['React', 'TypeScript', 'D3.js'],
+      githubUrl: 'github.com/alex/dashboard',
     },
   ],
-  skills: ['TypeScript', 'React', 'Node.js', 'Python', 'AWS', 'PostgreSQL', 'GraphQL'],
+  skills: {
+    technical: ['TypeScript', 'React', 'Node.js', 'Python', 'PostgreSQL', 'GraphQL'],
+    soft: ['Team Leadership', 'Problem Solving', 'Communication'],
+    tools: ['Git', 'Docker', 'AWS'],
+  },
   links: {
     github: 'github.com/alexjohnson',
     linkedin: 'linkedin.com/in/alexjohnson',
