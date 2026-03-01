@@ -14,6 +14,7 @@ export const Navigation: React.FC = () => {
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Saved', href: '/saved' },
     { label: 'Digest', href: '/digest' },
+    { label: 'Project 3', href: '/rb/01-problem' },
     { label: 'Settings', href: '/settings' },
     { label: 'Proof', href: '/proof' },
   ]
