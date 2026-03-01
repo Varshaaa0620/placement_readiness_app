@@ -75,6 +75,8 @@ export default function PreviewPage() {
   const resumeWrapperStyle: React.CSSProperties = {
     maxWidth: '100%',
     overflow: 'auto',
+    display: 'flex',
+    justifyContent: 'center',
   }
 
   // Classic Layout
@@ -86,10 +88,12 @@ export default function PreviewPage() {
         backgroundColor: 'white',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         minHeight: '1100px',
-        padding: '60px',
+        padding: '40px',
         fontFamily: 'Georgia, "Times New Roman", serif',
-        maxWidth: '850px',
+        width: '100%',
+        maxWidth: '700px',
         margin: '0 auto',
+        boxSizing: 'border-box',
       }}
     >
       {/* Header */}
@@ -210,12 +214,14 @@ export default function PreviewPage() {
         minHeight: '1100px',
         display: 'flex',
         fontFamily: '"Segoe UI", Roboto, sans-serif',
-        maxWidth: '850px',
+        width: '100%',
+        maxWidth: '700px',
         margin: '0 auto',
+        boxSizing: 'border-box',
       }}
     >
       {/* Sidebar */}
-      <div style={{ width: '35%', backgroundColor: colorVars.sidebarBg, padding: '40px 24px', color: '#333' }}>
+      <div style={{ width: '35%', minWidth: '180px', backgroundColor: colorVars.sidebarBg, padding: '30px 20px', color: '#333' }}>
         {/* Name */}
         <div style={{ marginBottom: '30px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 8px 0', color: colorVars.primaryDark, lineHeight: '1.2' }}>
@@ -286,7 +292,7 @@ export default function PreviewPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, padding: '40px' }}>
+      <div style={{ flex: 1, padding: '30px', minWidth: 0 }}>
         {/* Summary */}
         {resume.summary && (
           <div style={{ marginBottom: '30px' }}>
@@ -353,10 +359,12 @@ export default function PreviewPage() {
         backgroundColor: 'white',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         minHeight: '1100px',
-        padding: '80px 60px',
+        padding: '50px 40px',
         fontFamily: '"Helvetica Neue", Arial, sans-serif',
-        maxWidth: '850px',
+        width: '100%',
+        maxWidth: '700px',
         margin: '0 auto',
+        boxSizing: 'border-box',
       }}
     >
       {/* Header */}
@@ -575,6 +583,23 @@ export default function PreviewPage() {
           to {
             transform: translateX(0);
             opacity: 1;
+          }
+        }
+        
+        /* Ensure resume fits within container */
+        .resume-print-container {
+          transform-origin: top center;
+        }
+        
+        @media (max-width: 1100px) {
+          .resume-print-container {
+            transform: scale(0.85);
+          }
+        }
+        
+        @media (max-width: 900px) {
+          .resume-print-container {
+            transform: scale(0.75);
           }
         }
       `}</style>
