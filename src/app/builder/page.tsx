@@ -1,12 +1,32 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ResumeNav } from '../../components/ResumeNav'
 import { colors, spacing } from '../../styles/designTokens'
 import { ResumeData, defaultResumeData, sampleResumeData, Education, Experience, Project } from '../../types/resume'
+import { saveResumeData, loadResumeData, clearResumeData } from '../../utils/resumeStorage'
+import { calculateATSScore, ATSScore } from '../../utils/atsScoring'
 
 export default function BuilderPage() {
   const [resume, setResume] = useState<ResumeData>(defaultResumeData)
+  const [atsScore, setAtsScore] = useState<ATSScore | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedData = loadResumeData()
+    setResume(savedData)
+    setAtsScore(calculateATSScore(savedData))
+    setIsMounted(true)
+  }, [])
+
+  // Auto-save to localStorage whenever resume changes
+  useEffect(() => {
+    if (isMounted) {
+      saveResumeData(resume)
+      setAtsScore(calculateATSScore(resume))
+    }
+  }, [resume, isMounted])
 
   const updatePersonalInfo = (field: keyof ResumeData['personalInfo'], value: string) => {
     setResume((prev) => ({
@@ -91,6 +111,13 @@ export default function BuilderPage() {
     setResume(sampleResumeData)
   }
 
+  const clearData = () => {
+    if (confirm('Clear all resume data? This cannot be undone.')) {
+      clearResumeData()
+      setResume(defaultResumeData)
+    }
+  }
+
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: spacing.sm,
@@ -162,10 +189,13 @@ export default function BuilderPage() {
             borderRight: `1px solid ${colors.border.default}`,
           }}
         >
-          {/* Load Sample Data Button */}
-          <div style={{ marginBottom: spacing.md }}>
+          {/* Action Buttons */}
+          <div style={{ marginBottom: spacing.md, display: 'flex', gap: spacing.sm }}>
             <button onClick={loadSampleData} style={secondaryButtonStyle}>
               Load Sample Data
+            </button>
+            <button onClick={clearData} style={secondaryButtonStyle}>
+              Clear All
             </button>
           </div>
 
@@ -447,6 +477,87 @@ export default function BuilderPage() {
             >
               Live Preview
             </h3>
+
+            {/* ATS Score Meter */}
+            {atsScore && (
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  border: `1px solid ${colors.border.default}`,
+                  borderRadius: '4px',
+                  padding: spacing.md,
+                  marginBottom: spacing.md,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: spacing.sm,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: colors.text.primary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    ATS Readiness Score
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '24px',
+                      fontWeight: 600,
+                      color: atsScore.score >= 80 ? colors.semantic.success : atsScore.score >= 50 ? colors.semantic.warning : colors.accent,
+                    }}
+                  >
+                    {atsScore.score}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: '8px',
+                    backgroundColor: colors.border.subtle,
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    marginBottom: atsScore.suggestions.length > 0 ? spacing.sm : 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${atsScore.score}%`,
+                      height: '100%',
+                      backgroundColor: atsScore.score >= 80 ? colors.semantic.success : atsScore.score >= 50 ? colors.semantic.warning : colors.accent,
+                      transition: 'width 300ms ease',
+                    }}
+                  />
+                </div>
+                {atsScore.suggestions.length > 0 && (
+                  <div style={{ marginTop: spacing.sm }}>
+                    {atsScore.suggestions.map((suggestion, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          fontSize: '13px',
+                          color: colors.text.secondary,
+                          padding: `${spacing.xs} 0`,
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: spacing.xs,
+                        }}
+                      >
+                        <span style={{ color: colors.accent }}>•</span>
+                        <span>{suggestion}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Resume Preview Shell */}
             <div
