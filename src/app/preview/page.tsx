@@ -1,21 +1,80 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { ResumeNav } from '../../components/ResumeNav'
-import { sampleResumeData } from '../../types/resume'
+import { TemplateSwitcher } from '../../components/TemplateSwitcher'
+import { loadResumeData } from '../../utils/resumeStorage'
+import { ResumeData, defaultResumeData } from '../../types/resume'
+import { ResumeTemplate, getStoredTemplate } from '../../types/template'
+import { colors, spacing } from '../../styles/designTokens'
 
 export default function PreviewPage() {
-  const resume = sampleResumeData
+  const [resume, setResume] = useState<ResumeData>(defaultResumeData)
+  const [template, setTemplate] = useState<ResumeTemplate>('classic')
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setResume(loadResumeData())
+    setTemplate(getStoredTemplate())
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) return null
+
+  // Template-specific styles
+  const getTemplateStyles = (template: ResumeTemplate) => {
+    switch (template) {
+      case 'modern':
+        return {
+          container: { padding: '50px', borderLeft: '4px solid #000' },
+          header: { textAlign: 'left' as const, borderBottom: '2px solid #000', paddingBottom: '20px' },
+          name: { fontSize: '36px', fontWeight: 700, letterSpacing: '0', textTransform: 'none' as const },
+          sectionTitle: { borderBottom: '2px solid #000', color: '#000' },
+        }
+      case 'minimal':
+        return {
+          container: { padding: '60px', border: 'none' },
+          header: { textAlign: 'center' as const, borderBottom: 'none', paddingBottom: '30px' },
+          name: { fontSize: '28px', fontWeight: 400, letterSpacing: '4px', textTransform: 'uppercase' as const },
+          sectionTitle: { borderBottom: 'none', borderTop: '1px solid #ccc', paddingTop: '10px', color: '#555' },
+        }
+      default: // classic
+        return {
+          container: { padding: '60px', border: 'none' },
+          header: { textAlign: 'center' as const, borderBottom: '1px solid #000', paddingBottom: '20px' },
+          name: { fontSize: '32px', fontWeight: 400, letterSpacing: '2px', textTransform: 'uppercase' as const },
+          sectionTitle: { borderBottom: '1px solid #ccc', color: '#000' },
+        }
+    }
+  }
+
+  const styles = getTemplateStyles(template)
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
       <ResumeNav />
 
+      {/* Template Switcher */}
       <div
         style={{
           maxWidth: '850px',
           margin: '0 auto',
-          padding: '40px 20px',
+          padding: '20px 20px 0',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <TemplateSwitcher
+          currentTemplate={template}
+          onTemplateChange={setTemplate}
+        />
+      </div>
+
+      <div
+        style={{
+          maxWidth: '850px',
+          margin: '0 auto',
+          padding: '20px 20px 40px',
         }}
       >
         {/* Resume Paper */}
@@ -23,31 +82,26 @@ export default function PreviewPage() {
           style={{
             backgroundColor: 'white',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            padding: '60px',
             minHeight: '1100px',
+            ...styles.container,
           }}
         >
           {/* Header */}
           <div
             style={{
-              textAlign: 'center',
               marginBottom: '30px',
-              paddingBottom: '20px',
-              borderBottom: '1px solid #000',
+              ...styles.header,
             }}
           >
             <h1
               style={{
                 fontFamily: 'Georgia, "Times New Roman", serif',
-                fontSize: '32px',
-                fontWeight: 400,
                 color: '#000',
                 margin: '0 0 12px 0',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
+                ...styles.name,
               }}
             >
-              {resume.personalInfo.name}
+              {resume.personalInfo.name || 'Your Name'}
             </h1>
             <p
               style={{
@@ -79,12 +133,11 @@ export default function PreviewPage() {
                   fontFamily: 'Georgia, serif',
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: '#000',
                   textTransform: 'uppercase',
                   letterSpacing: '2px',
-                  borderBottom: '1px solid #ccc',
                   paddingBottom: '6px',
                   marginBottom: '12px',
+                  ...styles.sectionTitle,
                 }}
               >
                 Professional Summary
@@ -111,12 +164,11 @@ export default function PreviewPage() {
                   fontFamily: 'Georgia, serif',
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: '#000',
                   textTransform: 'uppercase',
                   letterSpacing: '2px',
-                  borderBottom: '1px solid #ccc',
                   paddingBottom: '6px',
                   marginBottom: '16px',
+                  ...styles.sectionTitle,
                 }}
               >
                 Professional Experience
@@ -188,12 +240,11 @@ export default function PreviewPage() {
                   fontFamily: 'Georgia, serif',
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: '#000',
                   textTransform: 'uppercase',
                   letterSpacing: '2px',
-                  borderBottom: '1px solid #ccc',
                   paddingBottom: '6px',
                   marginBottom: '16px',
+                  ...styles.sectionTitle,
                 }}
               >
                 Education
@@ -252,12 +303,11 @@ export default function PreviewPage() {
                   fontFamily: 'Georgia, serif',
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: '#000',
                   textTransform: 'uppercase',
                   letterSpacing: '2px',
-                  borderBottom: '1px solid #ccc',
                   paddingBottom: '6px',
                   marginBottom: '16px',
+                  ...styles.sectionTitle,
                 }}
               >
                 Projects
@@ -310,12 +360,11 @@ export default function PreviewPage() {
                   fontFamily: 'Georgia, serif',
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: '#000',
                   textTransform: 'uppercase',
                   letterSpacing: '2px',
-                  borderBottom: '1px solid #ccc',
                   paddingBottom: '6px',
                   marginBottom: '12px',
+                  ...styles.sectionTitle,
                 }}
               >
                 Skills

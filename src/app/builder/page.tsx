@@ -2,21 +2,31 @@
 
 import React, { useState, useEffect } from 'react'
 import { ResumeNav } from '../../components/ResumeNav'
+import { TemplateSwitcher } from '../../components/TemplateSwitcher'
 import { colors, spacing } from '../../styles/designTokens'
 import { ResumeData, defaultResumeData, sampleResumeData, Education, Experience, Project } from '../../types/resume'
+import { ResumeTemplate, getStoredTemplate, setStoredTemplate } from '../../types/template'
 import { saveResumeData, loadResumeData, clearResumeData } from '../../utils/resumeStorage'
 import { calculateATSScore, ATSScore } from '../../utils/atsScoring'
+import { getBulletInputGuidance } from '../../utils/bulletGuidance'
+import { getTopImprovements, ImprovementItem } from '../../utils/improvementPanel'
 
 export default function BuilderPage() {
   const [resume, setResume] = useState<ResumeData>(defaultResumeData)
   const [atsScore, setAtsScore] = useState<ATSScore | null>(null)
+  const [improvements, setImprovements] = useState<ImprovementItem[]>([])
+  const [template, setTemplate] = useState<ResumeTemplate>('classic')
   const [isMounted, setIsMounted] = useState(false)
 
   // Load from localStorage on mount
   useEffect(() => {
     const savedData = loadResumeData()
+    const savedTemplate = getStoredTemplate()
     setResume(savedData)
-    setAtsScore(calculateATSScore(savedData))
+    setTemplate(savedTemplate)
+    const score = calculateATSScore(savedData)
+    setAtsScore(score)
+    setImprovements(getTopImprovements(savedData, score))
     setIsMounted(true)
   }, [])
 
@@ -24,9 +34,16 @@ export default function BuilderPage() {
   useEffect(() => {
     if (isMounted) {
       saveResumeData(resume)
-      setAtsScore(calculateATSScore(resume))
+      const score = calculateATSScore(resume)
+      setAtsScore(score)
+      setImprovements(getTopImprovements(resume, score))
     }
   }, [resume, isMounted])
+
+  const handleTemplateChange = (newTemplate: ResumeTemplate) => {
+    setTemplate(newTemplate)
+    setStoredTemplate(newTemplate)
+  }
 
   const updatePersonalInfo = (field: keyof ResumeData['personalInfo'], value: string) => {
     setResume((prev) => ({
@@ -353,9 +370,27 @@ export default function BuilderPage() {
                   placeholder="Description of your responsibilities and achievements..."
                   value={exp.description}
                   onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
-                  style={{ ...inputStyle, minHeight: '80px', marginBottom: 0 }}
+                  style={{ ...inputStyle, minHeight: '80px', marginBottom: spacing.xs }}
                 />
-                <button onClick={() => removeExperience(exp.id)} style={{ ...secondaryButtonStyle, marginTop: spacing.xs, fontSize: '12px' }}>
+                {/* Bullet Guidance for Experience */}
+                {exp.description && getBulletInputGuidance(exp.description).length > 0 && (
+                  <div style={{ marginBottom: spacing.xs }}>
+                    {getBulletInputGuidance(exp.description).map((guidance, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          fontSize: '12px',
+                          color: colors.semantic.warning,
+                          fontStyle: 'italic',
+                          padding: '2px 0',
+                        }}
+                      >
+                        {guidance}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button onClick={() => removeExperience(exp.id)} style={{ ...secondaryButtonStyle, marginTop: 0, fontSize: '12px' }}>
                   Remove
                 </button>
               </div>
@@ -383,6 +418,24 @@ export default function BuilderPage() {
                   onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
                   style={{ ...inputStyle, minHeight: '60px', marginBottom: spacing.xs }}
                 />
+                {/* Bullet Guidance for Projects */}
+                {proj.description && getBulletInputGuidance(proj.description).length > 0 && (
+                  <div style={{ marginBottom: spacing.xs }}>
+                    {getBulletInputGuidance(proj.description).map((guidance, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          fontSize: '12px',
+                          color: colors.semantic.warning,
+                          fontStyle: 'italic',
+                          padding: '2px 0',
+                        }}
+                      >
+                        {guidance}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <input
                   type="text"
                   placeholder="Technologies used (comma separated)"
@@ -478,6 +531,14 @@ export default function BuilderPage() {
               Live Preview
             </h3>
 
+            {/* Template Switcher */}
+            <div style={{ marginBottom: spacing.md }}>
+              <TemplateSwitcher
+                currentTemplate={template}
+                onTemplateChange={handleTemplateChange}
+              />
+            </div>
+
             {/* ATS Score Meter */}
             {atsScore && (
               <div
@@ -556,6 +617,62 @@ export default function BuilderPage() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Top 3 Improvements */}
+            {improvements.length > 0 && (
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  border: `1px solid ${colors.border.default}`,
+                  borderRadius: '4px',
+                  padding: spacing.md,
+                  marginBottom: spacing.md,
+                }}
+              >
+                <h4
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text.primary,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    marginBottom: spacing.sm,
+                    marginTop: 0,
+                  }}
+                >
+                  Top 3 Improvements
+                </h4>
+                <div>
+                  {improvements.map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        fontSize: '13px',
+                        color: colors.text.secondary,
+                        padding: `${spacing.xs} 0`,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: spacing.xs,
+                      }}
+                    >
+                      <span
+                        style={{
+                          color:
+                            item.priority === 'high'
+                              ? colors.semantic.error
+                              : item.priority === 'medium'
+                              ? colors.semantic.warning
+                              : colors.text.tertiary,
+                        }}
+                      >
+                        {item.priority === 'high' ? '!' : item.priority === 'medium' ? '•' : '◦'}
+                      </span>
+                      <span>{item.message}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
