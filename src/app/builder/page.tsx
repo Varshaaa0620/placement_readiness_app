@@ -819,7 +819,7 @@ export default function BuilderPage() {
                         {proj.name || 'Project Name'}
                       </h3>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
-                        {proj.technologies.map((tech) => (
+                        {(Array.isArray(proj.technologies) ? proj.technologies : []).map((tech) => (
                           <span
                             key={tech}
                             style={{

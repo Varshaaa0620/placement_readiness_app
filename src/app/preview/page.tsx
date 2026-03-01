@@ -419,7 +419,7 @@ export default function PreviewPage() {
                     {proj.name}
                   </h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-                    {proj.technologies.map((tech) => (
+                    {(Array.isArray(proj.technologies) ? proj.technologies : []).map((tech) => (
                       <span
                         key={tech}
                         style={{

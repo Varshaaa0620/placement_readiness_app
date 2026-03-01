@@ -68,8 +68,9 @@ export function generatePlainTextResume(resume: ResumeData): string {
     lines.push('-'.repeat(50))
     resume.projects.forEach((proj) => {
       lines.push(`${proj.name}`)
-      if (proj.technologies.length > 0) {
-        lines.push(`Technologies: ${proj.technologies.join(', ')}`)
+      const techs = Array.isArray(proj.technologies) ? proj.technologies : []
+      if (techs.length > 0) {
+        lines.push(`Technologies: ${techs.join(', ')}`)
       }
       if (proj.description) {
         lines.push(proj.description)
