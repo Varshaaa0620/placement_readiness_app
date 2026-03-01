@@ -71,8 +71,15 @@ export default function PreviewPage() {
 
   const colorVars = generateColorVariations(colorTheme)
 
+  // Wrapper style for scrollable resume
+  const resumeWrapperStyle: React.CSSProperties = {
+    maxWidth: '100%',
+    overflow: 'auto',
+  }
+
   // Classic Layout
   const renderClassic = () => (
+    <div style={resumeWrapperStyle}>
     <div
       className="resume-print-container"
       style={{
@@ -81,6 +88,8 @@ export default function PreviewPage() {
         minHeight: '1100px',
         padding: '60px',
         fontFamily: 'Georgia, "Times New Roman", serif',
+        maxWidth: '850px',
+        margin: '0 auto',
       }}
     >
       {/* Header */}
@@ -187,10 +196,12 @@ export default function PreviewPage() {
         </div>
       )}
     </div>
+    </div>
   )
 
   // Modern Layout
   const renderModern = () => (
+    <div style={resumeWrapperStyle}>
     <div
       className="resume-print-container"
       style={{
@@ -199,6 +210,8 @@ export default function PreviewPage() {
         minHeight: '1100px',
         display: 'flex',
         fontFamily: '"Segoe UI", Roboto, sans-serif',
+        maxWidth: '850px',
+        margin: '0 auto',
       }}
     >
       {/* Sidebar */}
@@ -328,10 +341,12 @@ export default function PreviewPage() {
         )}
       </div>
     </div>
+    </div>
   )
 
   // Minimal Layout
   const renderMinimal = () => (
+    <div style={resumeWrapperStyle}>
     <div
       className="resume-print-container"
       style={{
@@ -340,6 +355,8 @@ export default function PreviewPage() {
         minHeight: '1100px',
         padding: '80px 60px',
         fontFamily: '"Helvetica Neue", Arial, sans-serif',
+        maxWidth: '850px',
+        margin: '0 auto',
       }}
     >
       {/* Header */}
@@ -425,6 +442,7 @@ export default function PreviewPage() {
           </div>
         </div>
       )}
+    </div>
     </div>
   )
 
