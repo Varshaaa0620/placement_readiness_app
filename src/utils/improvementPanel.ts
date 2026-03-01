@@ -35,7 +35,8 @@ export function getTopImprovements(resume: ResumeData, atsScore: ATSScore): Impr
   }
 
   // Check skills
-  if (resume.skills.length < 8) {
+  const totalSkills = resume.skills.technical.length + resume.skills.soft.length + resume.skills.tools.length
+  if (totalSkills < 8) {
     improvements.push({
       priority: 'medium',
       message: 'Add more skills (target 8+) to improve ATS matching.',
